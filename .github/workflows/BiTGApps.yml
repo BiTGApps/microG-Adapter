@@ -1,0 +1,163 @@
+name: BiTGApps Build
+
+on:
+  workflow_dispatch:
+
+env:
+  TOKEN: ${{ secrets.TOKEN }}
+  SA: SyncAdapter
+  RELEASE: v1.0
+
+jobs:
+  build:
+    if: github.repository_owner == 'BiTGApps'
+    runs-on: ubuntu-latest
+
+    steps:
+       - name: Initial Setup
+         uses: actions/checkout@v3
+
+       - name: Create BiTGApps
+         run: |
+           rm -rf BiTGApps
+           mkdir BiTGApps
+           install -d out
+
+       - name: Clone Build Sources
+         run: |
+           git clone https://github.com/BiTGApps/microG-Adapter BiTGApps/SyncAdapter-10.0-$RELEASE
+           git clone https://github.com/BiTGApps/microG-Adapter BiTGApps/SyncAdapter-11.0-$RELEASE
+           git clone https://github.com/BiTGApps/microG-Adapter BiTGApps/SyncAdapter-12.0-$RELEASE
+           git clone https://github.com/BiTGApps/microG-Adapter BiTGApps/SyncAdapter-12.1-$RELEASE
+           git clone https://github.com/BiTGApps/microG-Adapter BiTGApps/SyncAdapter-13.0-$RELEASE
+
+       - name: Create Sources
+         run: |
+           mkdir BiTGApps/sources
+
+       - name: Clone Package Sources
+         run: |
+           git clone https://github.com/BiTGApps/adapter-sources BiTGApps/sources/adapter-sources
+
+       - name: Initialize Package Sources
+         run: |
+           cp -rf BiTGApps/sources/adapter-sources/29 BiTGApps/SyncAdapter-10.0-$RELEASE
+           cp -rf BiTGApps/sources/adapter-sources/30 BiTGApps/SyncAdapter-11.0-$RELEASE
+           cp -rf BiTGApps/sources/adapter-sources/31 BiTGApps/SyncAdapter-12.0-$RELEASE
+           cp -rf BiTGApps/sources/adapter-sources/32 BiTGApps/SyncAdapter-12.1-$RELEASE
+           cp -rf BiTGApps/sources/adapter-sources/33 BiTGApps/SyncAdapter-13.0-$RELEASE
+
+       - name: Remove Package Sources
+         run: |
+           rm -rf BiTGApps/sources
+
+       - name: Download ZIP Signing Tool
+         run: |
+           wget https://github.com/BiTGApps/BiTGApps/raw/master/tools/zipsigner/zipsigner.jar
+
+       - name: Build Quince Tart Sync Package
+         run: |
+           cd BiTGApps/SyncAdapter-10.0-$RELEASE
+           . envsetup.sh && rm -rf envsetup.sh
+           cp -f 29/CalendarSync.tar.xz zip/sys
+           cp -f 29/ContactsSync.tar.xz zip/sys
+           cp -f 29/Default.tar.xz zip
+           rm -rf 29 && zip -qr9 SyncAdapter-10.0-$RELEASE.zip * && cd ../..
+           cp -f BiTGApps/SyncAdapter-10.0-$RELEASE/SyncAdapter-10.0-$RELEASE.zip out
+
+       - name: Sign Quince Tart Sync Package
+         run: |
+           sudo java -jar zipsigner.jar out/$SA-10.0-$RELEASE.zip out/$SA-10.0-$RELEASE-Signed.zip
+           rm -rf out/$SA-10.0-$RELEASE.zip && mv -f out/$SA-10.0-$RELEASE-Signed.zip out/$SA-10.0-$RELEASE.zip
+
+       - name: Build Red Velvet Cake Sync Package
+         run: |
+           cd BiTGApps/SyncAdapter-11.0-$RELEASE
+           . envsetup.sh && rm -rf envsetup.sh
+           cp -f 30/CalendarSync.tar.xz zip/sys
+           cp -f 30/ContactsSync.tar.xz zip/sys
+           cp -f 30/Default.tar.xz zip
+           rm -rf 30 && zip -qr9 SyncAdapter-11.0-$RELEASE.zip * && cd ../..
+           cp -f BiTGApps/SyncAdapter-11.0-$RELEASE/SyncAdapter-11.0-$RELEASE.zip out
+
+       - name: Sign Red Velvet Cake Sync Package
+         run: |
+           sudo java -jar zipsigner.jar out/$SA-11.0-$RELEASE.zip out/$SA-11.0-$RELEASE-Signed.zip
+           rm -rf out/$SA-11.0-$RELEASE.zip && mv -f out/$SA-11.0-$RELEASE-Signed.zip out/$SA-11.0-$RELEASE.zip
+
+       - name: Build Snow Cone Sync Package
+         run: |
+           cd BiTGApps/SyncAdapter-12.0-$RELEASE
+           . envsetup.sh && rm -rf envsetup.sh
+           cp -f 31/CalendarSync.tar.xz zip/sys
+           cp -f 31/ContactsSync.tar.xz zip/sys
+           cp -f 31/Default.tar.xz zip
+           rm -rf 31 && zip -qr9 SyncAdapter-12.0-$RELEASE.zip * && cd ../..
+           cp -f BiTGApps/SyncAdapter-12.0-$RELEASE/SyncAdapter-12.0-$RELEASE.zip out
+
+       - name: Sign Snow Cone Sync Package
+         run: |
+           sudo java -jar zipsigner.jar out/$SA-12.0-$RELEASE.zip out/$SA-12.0-$RELEASE-Signed.zip
+           rm -rf out/$SA-12.0-$RELEASE.zip && mv -f out/$SA-12.0-$RELEASE-Signed.zip out/$SA-12.0-$RELEASE.zip
+
+       - name: Build Snow Cone SL Sync Package
+         run: |
+           cd BiTGApps/SyncAdapter-12.1-$RELEASE
+           . envsetup.sh && rm -rf envsetup.sh
+           cp -f 32/CalendarSync.tar.xz zip/sys
+           cp -f 32/ContactsSync.tar.xz zip/sys
+           cp -f 32/Default.tar.xz zip
+           rm -rf 32 && zip -qr9 SyncAdapter-12.1-$RELEASE.zip * && cd ../..
+           cp -f BiTGApps/SyncAdapter-12.1-$RELEASE/SyncAdapter-12.1-$RELEASE.zip out
+
+       - name: Sign Snow Cone SL Sync Package
+         run: |
+           sudo java -jar zipsigner.jar out/$SA-12.1-$RELEASE.zip out/$SA-12.1-$RELEASE-Signed.zip
+           rm -rf out/$SA-12.1-$RELEASE.zip && mv -f out/$SA-12.1-$RELEASE-Signed.zip out/$SA-12.1-$RELEASE.zip
+
+       - name: Build Tiramisu Sync Package
+         run: |
+           cd BiTGApps/SyncAdapter-13.0-$RELEASE
+           . envsetup.sh && rm -rf envsetup.sh
+           cp -f 33/CalendarSync.tar.xz zip/sys
+           cp -f 33/ContactsSync.tar.xz zip/sys
+           cp -f 33/Default.tar.xz zip
+           rm -rf 33 && zip -qr9 SyncAdapter-13.0-$RELEASE.zip * && cd ../..
+           cp -f BiTGApps/SyncAdapter-13.0-$RELEASE/SyncAdapter-13.0-$RELEASE.zip out
+
+       - name: Sign Tiramisu Sync Package
+         run: |
+           sudo java -jar zipsigner.jar out/$SA-13.0-$RELEASE.zip out/$SA-13.0-$RELEASE-Signed.zip
+           rm -rf out/$SA-13.0-$RELEASE.zip && mv -f out/$SA-13.0-$RELEASE-Signed.zip out/$SA-13.0-$RELEASE.zip
+
+       - name: Github Release CLI
+         run: |
+           npm install -g github-release-cli
+
+       - name: Release Signed Package
+         env:
+           PACKAGE: false
+         run: |
+           github-release upload \
+           --owner "BiTGApps" \
+           --repo "microG-Adapter" \
+           --token "$TOKEN" \
+           --tag "${RELEASE}" \
+           --release-name "$SA ${RELEASE}" \
+           "out/SyncAdapter-10.0-$RELEASE.zip" \
+           "out/SyncAdapter-11.0-$RELEASE.zip" \
+           "out/SyncAdapter-12.0-$RELEASE.zip" \
+           "out/SyncAdapter-12.1-$RELEASE.zip" \
+           "out/SyncAdapter-13.0-$RELEASE.zip"
+
+       - name: Upload Build Artifact
+         if: ${{ env.PACKAGE == 'true' }}
+         uses: actions/upload-artifact@v3
+         with:
+           name: BiTGApps-Build
+           path: |
+             out/SyncAdapter-10.0-$RELEASE.zip
+             out/SyncAdapter-11.0-$RELEASE.zip
+             out/SyncAdapter-12.0-$RELEASE.zip
+             out/SyncAdapter-12.1-$RELEASE.zip
+             out/SyncAdapter-13.0-$RELEASE.zip
