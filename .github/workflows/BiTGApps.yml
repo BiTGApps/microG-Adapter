@@ -6,7 +6,7 @@ on:
 env:
   TOKEN: ${{ secrets.TOKEN }}
   SA: SyncAdapter
-  RELEASE: v1.0
+  RELEASE: v1.1
 
 jobs:
   build:
