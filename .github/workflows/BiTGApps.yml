@@ -5,7 +5,6 @@ on:
 
 env:
   TOKEN: ${{ secrets.TOKEN }}
-  SA: SyncAdapter
   RELEASE: v1.1
 
 jobs:
@@ -55,7 +54,7 @@ jobs:
          run: |
            wget https://github.com/BiTGApps/BiTGApps/raw/master/tools/zipsigner/zipsigner.jar
 
-       - name: Build Quince Tart Sync Package
+       - name: Build QuinceTart Adapter
          run: |
            cd BiTGApps/SyncAdapter-10.0-$RELEASE
            . envsetup.sh && rm -rf envsetup.sh
@@ -65,12 +64,12 @@ jobs:
            rm -rf 29 && zip -qr9 SyncAdapter-10.0-$RELEASE.zip * && cd ../..
            cp -f BiTGApps/SyncAdapter-10.0-$RELEASE/SyncAdapter-10.0-$RELEASE.zip out
 
-       - name: Sign Quince Tart Sync Package
+       - name: Sign QuinceTart Adapter
          run: |
-           sudo java -jar zipsigner.jar out/$SA-10.0-$RELEASE.zip out/$SA-10.0-$RELEASE-Signed.zip
-           rm -rf out/$SA-10.0-$RELEASE.zip && mv -f out/$SA-10.0-$RELEASE-Signed.zip out/$SA-10.0-$RELEASE.zip
+           sudo java -jar zipsigner.jar out/SyncAdapter-10.0-$RELEASE.zip out/SyncAdapter-10.0-$RELEASE-Signed.zip
+           rm -rf out/SyncAdapter-10.0-$RELEASE.zip && mv -f out/SyncAdapter-10.0-$RELEASE-Signed.zip out/SyncAdapter-10.0-$RELEASE.zip
 
-       - name: Build Red Velvet Cake Sync Package
+       - name: Build RedVelvetCake Adapter
          run: |
            cd BiTGApps/SyncAdapter-11.0-$RELEASE
            . envsetup.sh && rm -rf envsetup.sh
@@ -80,12 +79,12 @@ jobs:
            rm -rf 30 && zip -qr9 SyncAdapter-11.0-$RELEASE.zip * && cd ../..
            cp -f BiTGApps/SyncAdapter-11.0-$RELEASE/SyncAdapter-11.0-$RELEASE.zip out
 
-       - name: Sign Red Velvet Cake Sync Package
+       - name: Sign RedVelvetCake Adapter
          run: |
-           sudo java -jar zipsigner.jar out/$SA-11.0-$RELEASE.zip out/$SA-11.0-$RELEASE-Signed.zip
-           rm -rf out/$SA-11.0-$RELEASE.zip && mv -f out/$SA-11.0-$RELEASE-Signed.zip out/$SA-11.0-$RELEASE.zip
+           sudo java -jar zipsigner.jar out/SyncAdapter-11.0-$RELEASE.zip out/SyncAdapter-11.0-$RELEASE-Signed.zip
+           rm -rf out/SyncAdapter-11.0-$RELEASE.zip && mv -f out/SyncAdapter-11.0-$RELEASE-Signed.zip out/SyncAdapter-11.0-$RELEASE.zip
 
-       - name: Build Snow Cone Sync Package
+       - name: Build SnowCone Adapter
          run: |
            cd BiTGApps/SyncAdapter-12.0-$RELEASE
            . envsetup.sh && rm -rf envsetup.sh
@@ -95,12 +94,12 @@ jobs:
            rm -rf 31 && zip -qr9 SyncAdapter-12.0-$RELEASE.zip * && cd ../..
            cp -f BiTGApps/SyncAdapter-12.0-$RELEASE/SyncAdapter-12.0-$RELEASE.zip out
 
-       - name: Sign Snow Cone Sync Package
+       - name: Sign SnowCone Adapter
          run: |
-           sudo java -jar zipsigner.jar out/$SA-12.0-$RELEASE.zip out/$SA-12.0-$RELEASE-Signed.zip
-           rm -rf out/$SA-12.0-$RELEASE.zip && mv -f out/$SA-12.0-$RELEASE-Signed.zip out/$SA-12.0-$RELEASE.zip
+           sudo java -jar zipsigner.jar out/SyncAdapter-12.0-$RELEASE.zip out/SyncAdapter-12.0-$RELEASE-Signed.zip
+           rm -rf out/SyncAdapter-12.0-$RELEASE.zip && mv -f out/SyncAdapter-12.0-$RELEASE-Signed.zip out/SyncAdapter-12.0-$RELEASE.zip
 
-       - name: Build Snow Cone SL Sync Package
+       - name: Build SnowCone Adapter
          run: |
            cd BiTGApps/SyncAdapter-12.1-$RELEASE
            . envsetup.sh && rm -rf envsetup.sh
@@ -110,12 +109,12 @@ jobs:
            rm -rf 32 && zip -qr9 SyncAdapter-12.1-$RELEASE.zip * && cd ../..
            cp -f BiTGApps/SyncAdapter-12.1-$RELEASE/SyncAdapter-12.1-$RELEASE.zip out
 
-       - name: Sign Snow Cone SL Sync Package
+       - name: Sign SnowCone Adapter
          run: |
-           sudo java -jar zipsigner.jar out/$SA-12.1-$RELEASE.zip out/$SA-12.1-$RELEASE-Signed.zip
-           rm -rf out/$SA-12.1-$RELEASE.zip && mv -f out/$SA-12.1-$RELEASE-Signed.zip out/$SA-12.1-$RELEASE.zip
+           sudo java -jar zipsigner.jar out/SyncAdapter-12.1-$RELEASE.zip out/SyncAdapter-12.1-$RELEASE-Signed.zip
+           rm -rf out/SyncAdapter-12.1-$RELEASE.zip && mv -f out/SyncAdapter-12.1-$RELEASE-Signed.zip out/SyncAdapter-12.1-$RELEASE.zip
 
-       - name: Build Tiramisu Sync Package
+       - name: Build Tiramisu Adapter
          run: |
            cd BiTGApps/SyncAdapter-13.0-$RELEASE
            . envsetup.sh && rm -rf envsetup.sh
@@ -125,10 +124,10 @@ jobs:
            rm -rf 33 && zip -qr9 SyncAdapter-13.0-$RELEASE.zip * && cd ../..
            cp -f BiTGApps/SyncAdapter-13.0-$RELEASE/SyncAdapter-13.0-$RELEASE.zip out
 
-       - name: Sign Tiramisu Sync Package
+       - name: Sign Tiramisu Adapter
          run: |
-           sudo java -jar zipsigner.jar out/$SA-13.0-$RELEASE.zip out/$SA-13.0-$RELEASE-Signed.zip
-           rm -rf out/$SA-13.0-$RELEASE.zip && mv -f out/$SA-13.0-$RELEASE-Signed.zip out/$SA-13.0-$RELEASE.zip
+           sudo java -jar zipsigner.jar out/SyncAdapter-13.0-$RELEASE.zip out/SyncAdapter-13.0-$RELEASE-Signed.zip
+           rm -rf out/SyncAdapter-13.0-$RELEASE.zip && mv -f out/SyncAdapter-13.0-$RELEASE-Signed.zip out/SyncAdapter-13.0-$RELEASE.zip
 
        - name: Github Release CLI
          run: |
@@ -143,7 +142,7 @@ jobs:
            --repo "microG-Adapter" \
            --token "$TOKEN" \
            --tag "${RELEASE}" \
-           --release-name "$SA ${RELEASE}" \
+           --release-name "SyncAdapter ${RELEASE}" \
            "out/SyncAdapter-10.0-$RELEASE.zip" \
            "out/SyncAdapter-11.0-$RELEASE.zip" \
            "out/SyncAdapter-12.0-$RELEASE.zip" \
