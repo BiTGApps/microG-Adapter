@@ -331,11 +331,11 @@ mount_all() {
   done
   mount -o remount,rw -t auto / > /dev/null 2>&1
   ui_print "- Mounting /system"
-  if [ "$(grep -w -o '/system' /proc/mounts)" ]; then
+  if [ "$(grep -wo '/system' /proc/mounts)" ]; then
     mount -o remount,rw -t auto /system > /dev/null 2>&1
     is_mounted /system || on_abort "! Cannot mount /system"
   fi
-  if [ "$(grep -w -o '/system_root' /proc/mounts)" ]; then
+  if [ "$(grep -wo '/system_root' /proc/mounts)" ]; then
     mount -o remount,rw -t auto /system_root > /dev/null 2>&1
     is_mounted /system_root || on_abort "! Cannot mount /system_root"
   fi
@@ -482,7 +482,7 @@ sdk_v25_install() {
   pkg_TMPSys
   pkg_TMPDefault
   # Purge runtime permissions
-  rm -rf $(find /data -iname "runtime-permissions.xml")
+  rm -rf $(find /data -type f -iname "runtime-permissions.xml")
 }
 
 backup_script() {
