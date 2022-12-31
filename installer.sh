@@ -1,5 +1,11 @@
 # This file is part of The BiTGApps Project
 
+# List of GApps Packages
+BITGAPPS="
+zip/sys/CalendarSync.tar.xz
+zip/sys/ContactsSync.tar.xz
+zip/Default.tar.xz"
+
 # Handle installation of Additional Package
 ZIPNAME="$(basename "$ZIPFILE" ".zip" | tr '[:upper:]' '[:lower:]')"
 
@@ -29,6 +35,8 @@ if [[ "$(getprop "sys.bootmode")" = "2" ]]; then
   mount -o remount,rw,errors=continue $MIRROR/system 2>/dev/null
   mount -o remount,rw,errors=continue $MIRROR/product 2>/dev/null
   mount -o remount,rw,errors=continue $MIRROR/system_ext 2>/dev/null
+  # Product is a dedicated partition
+  PRODUCT=$(grep -s " $(readlink -f /product) " /proc/mounts)
   # Set installation layout
   SYSTEM="$MIRROR/system"
   # Backup installation layout
@@ -38,13 +46,8 @@ if [[ "$(getprop "sys.bootmode")" = "2" ]]; then
     echo "! Read-only file system"
     exit 1
   fi
-fi
-
-# Product is a dedicated partition
-if [[ "$(getprop "sys.bootmode")" = "2" ]]; then
-  if grep -q " $(readlink -f /product) " /proc/mounts; then
-    ln -sf /product /system
-  fi
+  # Product is a dedicated partition
+  [[ "$PRODUCT" ]] && ln -sf /product /system
 fi
 
 # Detect whether in boot mode
@@ -84,25 +87,6 @@ ui_print() {
 
 print_title "BiTGApps $version Installer"
 
-recovery_actions() {
-  if [ "$BOOTMODE" = "false" ]; then
-    OLD_LD_LIB=$LD_LIBRARY_PATH
-    OLD_LD_PRE=$LD_PRELOAD
-    OLD_LD_CFG=$LD_CONFIG_FILE
-    unset LD_LIBRARY_PATH
-    unset LD_PRELOAD
-    unset LD_CONFIG_FILE
-  fi
-}
-
-recovery_cleanup() {
-  if [ "$BOOTMODE" = "false" ]; then
-    [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB
-    [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE
-    [ -z $OLD_LD_CFG ] || export LD_CONFIG_FILE=$OLD_LD_CFG
-  fi
-}
-
 build_defaults() {
   # Compressed Packages
   ZIP_FILE="$TMP/zip"
@@ -118,10 +102,10 @@ build_defaults() {
 }
 
 on_partition_check() {
-  system_as_root=`getprop ro.build.system_root_image`
-  slot_suffix=`getprop ro.boot.slot_suffix`
-  AB_OTA_UPDATER=`getprop ro.build.ab_update`
-  dynamic_partitions=`getprop ro.boot.dynamic_partitions`
+  system_as_root=$(getprop ro.build.system_root_image)
+  slot_suffix=$(getprop ro.boot.slot_suffix)
+  AB_OTA_UPDATER=$(getprop ro.build.ab_update)
+  dynamic_partitions=$(getprop ro.boot.dynamic_partitions)
 }
 
 ab_partition() {
@@ -264,10 +248,15 @@ mount_all() {
   $SYSTEM_ROOT && ui_print "- Device is system-as-root"
   $SUPER_PARTITION && ui_print "- Super partition detected"
   # Check A/B slot
-  [ "$slot" ] || slot=$(getprop ro.boot.slot_suffix 2>/dev/null)
-  [ "$slot" ] || slot=`grep_cmdline androidboot.slot_suffix`
-  [ "$slot" ] || slot=`grep_cmdline androidboot.slot`
+  [ "$slot" ] || slot=$(getprop ro.boot.slot_suffix)
+  [ "$slot" ] || slot=$(grep_cmdline androidboot.slot_suffix)
+  [ "$slot" ] || slot=$(grep_cmdline androidboot.slot)
   [ "$slot" ] && ui_print "- Current boot slot: $slot"
+  # Store and reset environmental variables
+  OLD_LD_LIB=$LD_LIBRARY_PATH && unset LD_LIBRARY_PATH
+  OLD_LD_PRE=$LD_PRELOAD && unset LD_PRELOAD
+  OLD_LD_CFG=$LD_CONFIG_FILE && unset LD_CONFIG_FILE
+  # Make sure random won't get blocked
   mount -o bind /dev/urandom /dev/random
   if ! is_mounted /cache; then
     mount /cache > /dev/null 2>&1
@@ -365,6 +354,10 @@ unmount_all() {
     umount -l /product > /dev/null 2>&1
     umount -l /system_ext > /dev/null 2>&1
     umount -l /dev/random > /dev/null 2>&1
+    # Restore environmental variables
+    export LD_LIBRARY_PATH=$OLD_LD_LIB
+    export LD_PRELOAD=$OLD_LD_PRE
+    export LD_CONFIG_FILE=$OLD_LD_CFG
   fi
 }
 
@@ -377,7 +370,6 @@ on_abort() {
   $BOOTMODE && exit 1
   umount_apex
   unmount_all
-  recovery_cleanup
   f_cleanup
   d_cleanup
   ui_print "! Installation failed"
@@ -390,7 +382,6 @@ on_abort() {
 on_installed() {
   umount_apex
   unmount_all
-  recovery_cleanup
   f_cleanup
   d_cleanup
   ui_print "- Installation complete"
@@ -434,9 +425,11 @@ pkg_TMPSys() {
   for file in $file_list; do
     install -D "$TMP_SYS/${file}" "$SYSTEM_APP/${file}"
     chmod 0644 "$SYSTEM_APP/${file}"
+    ch_con system "$SYSTEM_APP/${file}"
   done
   for dir in $dir_list; do
     chmod 0755 "$SYSTEM_APP/${dir}"
+    ch_con system "$SYSTEM_APP/${dir}"
   done
 }
 
@@ -446,9 +439,11 @@ pkg_TMPDefault() {
   for file in $file_list; do
     install -D "$TMP_DEFAULT/${file}" "$SYSTEM_ETC_DEFAULT/${file}"
     chmod 0644 "$SYSTEM_ETC_DEFAULT/${file}"
+    ch_con system "$SYSTEM_ETC_DEFAULT/${file}"
   done
   for dir in $dir_list; do
     chmod 0755 "$SYSTEM_ETC_DEFAULT/${dir}"
+    ch_con system "$SYSTEM_ETC_DEFAULT/${dir}"
   done
 }
 
@@ -468,13 +463,12 @@ sdk_v25_install() {
   rm -rf $SYSTEM_APP/CalendarSync
   rm -rf $SYSTEM_APP/ContactsSync
   ui_print "- Installing Sync Adapter"
-  ZIP="zip/sys/CalendarSync.tar.xz zip/sys/ContactsSync.tar.xz zip/Default.tar.xz"
   if [ "$BOOTMODE" = "false" ]; then
-    for f in $ZIP; do unzip -oq "$ZIPFILE" "$f" -d "$TMP"; done
+    for f in $BITGAPPS; do unzip -oq "$ZIPFILE" "$f" -d "$TMP"; done
   fi
   # Allow unpack, when installation base is Magisk
   if [[ "$(getprop "sys.bootmode")" = "2" ]]; then
-    for f in $ZIP; do $(unzip -oq "$ZIPFILE" "$f" -d "$TMP"); done
+    for f in $BITGAPPS; do $(unzip -oq "$ZIPFILE" "$f" -d "$TMP"); done
   fi
   tar -xf $ZIP_FILE/sys/CalendarSync.tar.xz -C $TMP_SYS
   tar -xf $ZIP_FILE/sys/ContactsSync.tar.xz -C $TMP_SYS
@@ -506,7 +500,6 @@ backup_script() {
 
 pre_install() {
   umount_all
-  recovery_actions
   on_partition_check
   ab_partition
   system_as_root
@@ -515,13 +508,31 @@ pre_install() {
   mount_apex
 }
 
+df_reclaimed() {
+  list_files | while read FILE CLAIMED; do
+    PKG="$(find /system -type d -iname $FILE)"
+    CLAIMED="$(du -sxk "$PKG" | cut -f1)"
+    # Reclaimed GApps Space in KB's
+    echo "$CLAIMED" >> $TMP/RAW
+  done
+  # Remove White Spaces
+  sed -i '/^[[:space:]]*$/d' $TMP/RAW
+  # Reclaimed Removal Space in KB's
+  if ! grep -soEq '[0-9]+' "$TMP/RAW"; then
+    # When raw output of claimed is empty
+    CLAIMED="0"
+  else
+    CLAIMED="$(grep -soE '[0-9]+' "$TMP/RAW" | paste -sd+ | bc)"
+  fi
+}
+
 df_partition() {
   # Get the available space left on the device
   size=`df -k /system | tail -n 1 | tr -s ' ' | cut -d' ' -f4`
   # Disk space in human readable format (k=1024)
   ds_hr=`df -h /system | tail -n 1 | tr -s ' ' | cut -d' ' -f4`
   # Common target
-  CAPACITY="$CAPACITY"
+  CAPACITY="$(($CAPACITY-$CLAIMED))"
   # Print partition type
   partition="System"
 }
@@ -539,6 +550,7 @@ df_checker() {
 }
 
 post_install() {
+  df_reclaimed
   df_partition
   df_checker
   build_defaults
